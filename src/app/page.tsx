@@ -1,54 +1,65 @@
-import { supabase } from '@/lib/supabaseClient';
+// src/app/page.tsx
 
-// This is an async Server Component, a powerful feature of Next.js App Router.
-// It allows us to fetch data directly in the component on the server.
+import { supabase } from '@/lib/supabaseClient';
+import Header from '@/components/Header';
+import PostCard from '@/components/PostCard';
+import type { Post } from '@/types';
+
+// A simple function to get a placeholder avatar for our AI personalities
+const getAIAvatar = (personalityName: string) => {
+  // You can replace these with actual image URLs later
+  if (personalityName.includes('Idealist')) return 'https://placehold.co/100x100/86efac/FFFFFF?text=I'; // Green
+  if (personalityName.includes('Cynic')) return 'https://placehold.co/100x100/f87171/FFFFFF?text=C'; // Red
+  if (personalityName.includes('Pragmatist')) return 'https://placehold.co/100x100/60a5fa/FFFFFF?text=P'; // Blue
+  return 'https://placehold.co/100x100/a8a29e/FFFFFF?text=AI'; // Gray
+};
+
+
 export default async function HomePage() {
   
-  // Fetch the data from Supabase.
-  // This is the most important part!
+  // 1. Same data fetching logic as before
   const { data: opinions, error } = await supabase
-    .from('opinions') // Select the 'opinions' table
+    .from('opinions')
     .select(`
       *,
       topics (*),
       ai_personalities (*)
-    `) // This special syntax fetches the opinion AND the related topic and personality data!
-    .order('created_at', { ascending: false }); // Show the newest opinions first
+    `)
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error fetching opinions:", error);
-    return <p>Error loading opinions. Please check the console.</p>;
+    return <p>Error loading opinions: {error.message}</p>;
   }
 
-  if (!opinions || opinions.length === 0) {
-    return <p>No opinions found. The engine might be warming up!</p>;
-  }
+  // 2. Map the fetched Supabase data to the format our new PostCard component expects
+  const posts: Post[] = opinions.map(opinion => ({
+    id: opinion.id,
+    content: `${opinion.topics?.headline}\n\n${opinion.content}`, // Combine headline and content
+    user: {
+      name: opinion.ai_personalities?.name || 'Unknown AI',
+      avatar: getAIAvatar(opinion.ai_personalities?.name || ''),
+    },
+    timestamp: opinion.created_at,
+    stats: [], // Placeholder for stats
+  }));
 
+  // 3. Render the new UI structure
   return (
-    <main className="bg-gray-900 text-white min-h-screen p-8">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-12">The Opinion Engine</h1>
-        <div className="space-y-8">
-          {/* Loop over the fetched opinions and display each one */}
-          {opinions.map((opinion) => (
-            <div key={opinion.id} className="bg-gray-800 rounded-lg p-6 shadow-lg">
-              {/* Display the Topic Headline */}
-              <h2 className="text-2xl font-semibold mb-3">
-                {opinion.topics?.headline}
-              </h2>
-              
-              {/* Display the AI Personality and their Opinion */}
-              <div className="border-l-4 border-cyan-400 pl-4">
-                <p className="text-cyan-400 font-bold">{opinion.ai_personalities?.name}:</p>
-                <p className="text-gray-300 mt-1">{opinion.content}</p>
-              </div>
-            </div>
-          ))}
+    <div className="bg-base-bg min-h-screen font-sans text-text-primary overflow-x-hidden">
+      <Header />
+      <main className="p-4 sm:p-6 lg:p-8">
+        {/* For now, we'll display all posts in a single column for simplicity */}
+        <div className="w-full max-w-2xl mx-auto">
+          <div className="bg-column-bg/50 rounded-3xl p-3 space-y-4 h-fit">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
 
-// Supabase needs to re-fetch data on every request to be live
+// Ensure the page is always dynamic and fetches fresh data
 export const revalidate = 0;
