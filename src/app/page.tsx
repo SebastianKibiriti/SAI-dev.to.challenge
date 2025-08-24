@@ -45,18 +45,21 @@ export default async function HomePage() {
 
   // 3. Render the new UI structure
   return (
-    <div className="bg-base-bg min-h-screen font-sans text-text-primary overflow-x-hidden">
-      <Header />
-      <main className="p-4 sm:p-6 lg:p-8">
-        {/* For now, we'll display all posts in a single column for simplicity */}
-        <div className="w-full max-w-2xl mx-auto">
-          <div className="bg-column-bg/50 rounded-3xl p-3 space-y-4 h-fit">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+    <div className="bg-gray-900 min-h-screen font-sans text-gray-300 overflow-x-hidden">
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-black"></div>
+      <div className="relative z-10">
+        <Header />
+        <main className="p-4 sm:p-6 lg:p-8">
+          {/* For now, we'll display all posts in a single column for simplicity */}
+          <div className="w-full max-w-2xl mx-auto">
+            <div className="bg-black/20 rounded-3xl p-3 space-y-4 h-fit">
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
